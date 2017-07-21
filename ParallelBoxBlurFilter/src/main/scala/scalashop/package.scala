@@ -1,5 +1,4 @@
 
-import common._
 
 package object scalashop {
 
@@ -33,14 +32,40 @@ package object scalashop {
   /** Image is a two-dimensional matrix of pixel values. */
   class Img(val width: Int, val height: Int, private val data: Array[RGBA]) {
     def this(w: Int, h: Int) = this(w, h, new Array(w * h))
+
     def apply(x: Int, y: Int): RGBA = data(y * width + x)
+
     def update(x: Int, y: Int, c: RGBA): Unit = data(y * width + x) = c
   }
 
   /** Computes the blurred RGBA value of a single pixel of the input image. */
   def boxBlurKernel(src: Img, x: Int, y: Int, radius: Int): RGBA = {
     // TODO implement using while loops
-    ???
+    val minCoordX = clamp(x - radius, 0, src.width - 1)
+    val maxCoordX = clamp(x + radius, 0, src.width - 1)
+    var coordX = minCoordX
+    val minCoordY = clamp(y - radius, 0, src.height - 1)
+    val maxCoordY = clamp(y + radius, 0, src.height - 1)
+    var coordY = minCoordY
+    var rgbaList: List[RGBA] = Nil
+
+    while (coordX <= maxCoordX) {
+      while (coordY <= maxCoordY) {
+        rgbaList = src.apply(coordX, coordY) :: rgbaList
+        coordY += 1
+      }
+      coordY = minCoordY
+      coordX += 1
+    }
+
+    calculateAvg(rgbaList)
   }
 
+  def calculateAvg(rgbaList: List[RGBA]): RGBA = {
+    rgba(avg(rgbaList, red), avg(rgbaList, green), avg(rgbaList, blue), avg(rgbaList, alpha))
+  }
+
+  def avg(rgbaList: List[RGBA], fun: RGBA => Int): Int = {
+    rgbaList.map(rgba => fun(rgba)).sum / rgbaList.size
+  }
 }
