@@ -82,6 +82,7 @@ object ScalaTestRunner {
         val msg = "Timeout when running ScalaTest\n" + out.toString()
         logError(msg)
         proc.destroy()
+        throw e
       case e: Throwable =>
         val msg = "Error occurred while running the ScalaTest command\n" + e.toString + "\n" + out.toString()
         logError(msg)
@@ -148,7 +149,7 @@ object ScalaTestRunner {
 
   private def unpickleSummary(logError: (String) => Unit, runLog: String, summaryFileStr: String): GradingSummary = {
     try {
-      io.Source.fromFile(summaryFileStr).getLines.mkString("\n").unpickle[GradingSummary]
+      scala.io.Source.fromFile(summaryFileStr).getLines.mkString("\n").unpickle[GradingSummary]
     } catch {
       case e: Throwable =>
         val msg = "Error occured while reading ScalaTest summary file\n" + e.toString + "\n" + runLog

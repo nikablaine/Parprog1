@@ -8,7 +8,9 @@ object StyleChecker {
   val maxResult = 100
 
   class CustomTextOutput[T <: FileSpec](stream: PrintStream) extends Output[T] {
-    private val messageHelper = new MessageHelper(ConfigFactory.load())
+    // Use the parent class loader because sbt runs our code in a class loader that does not
+    // contain the reference.conf file
+    private val messageHelper = new MessageHelper(ConfigFactory.load(getClass.getClassLoader.getParent))
 
     var fileCount: Int = _
     override def message(m: Message[T]): Unit = m match {

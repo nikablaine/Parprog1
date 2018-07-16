@@ -1,8 +1,9 @@
 package reductions
 
-import scala.annotation._
+import common.parallel
 import org.scalameter._
-import common._
+
+import scala.math.min
 
 object ParallelParenthesesBalancingRunner {
 
@@ -15,7 +16,7 @@ object ParallelParenthesesBalancingRunner {
     Key.exec.maxWarmupRuns -> 80,
     Key.exec.benchRuns -> 120,
     Key.verbose -> true
-  ) withWarmer(new Warmer.Default)
+  ) withWarmer (new Warmer.Default)
 
   def main(args: Array[String]): Unit = {
     val length = 100000000
@@ -39,7 +40,7 @@ object ParallelParenthesesBalancingRunner {
 object ParallelParenthesesBalancing {
 
   /** Returns `true` iff the parentheses in the input `chars` are balanced.
-   */
+    */
   def balance(chars: Array[Char]): Boolean = {
     def parentheses(chars: Array[Char]): List[Char] = chars.toList filter (char => char == '(' || char == ')')
 
@@ -58,18 +59,45 @@ object ParallelParenthesesBalancing {
   }
 
   /** Returns `true` iff the parentheses in the input `chars` are balanced.
-   */
+    */
   def parBalance(chars: Array[Char], threshold: Int): Boolean = {
 
-    def traverse(idx: Int, until: Int, arg1: Int, arg2: Int) /*: ???*/ = {
-      ???
+    def traverse(idx: Int, until: Int, arg1: Int, arg2: Int): (Int, Int) = {
+
+      /**
+        *
+        * @param chars char array
+        * @param acc   (unmatched left parentheses, unmatched right parentheses)
+        * @return (unmatched left parentheses, unmatched right parentheses) in the array
+        */
+      def traverseHelper(chars: Array[Char], acc: (Int, Int)): (Int, Int) = {
+        chars match {
+          case y if y.isEmpty => acc
+          case _ => chars.head match {
+            case '(' => traverseHelper(chars.tail, (acc._1 + 1, acc._2))
+            case ')' => acc._1 match {
+              case x if x > 0 => traverseHelper(chars.tail, (acc._1 - 1, acc._2))
+              case _ => traverseHelper(chars.tail, (acc._1, acc._2 + 1))
+            }
+            case _ => traverseHelper(chars.tail, acc)
+          }
+        }
+      }
+
+      traverseHelper(chars.slice(idx, until), (arg1, arg2))
     }
 
-    def reduce(from: Int, until: Int) /*: ???*/ = {
-      ???
+    def reduce(from: Int, until: Int): (Int, Int) = {
+      until - from match {
+        case x if x <= threshold => traverse(from, until, 0, 0)
+        case _ => val mid = (from + until) / 2
+          val (r1, r2) = parallel(reduce(from, mid), reduce(mid, until))
+          val matchedParentheses = min(r1._1, r2._2)
+          (r1._1 + r2._1 - matchedParentheses, r1._2 + r2._2 - matchedParentheses)
+      }
     }
 
-    reduce(0, chars.length) == ???
+    reduce(0, chars.length) == (0, 0)
   }
 
   // For those who want more:

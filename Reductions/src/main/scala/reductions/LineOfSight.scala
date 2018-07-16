@@ -76,7 +76,7 @@ object LineOfSight {
   }
 
   /** Pushes the maximum angle in the prefix of the array to each leaf of the
-   *  reduction `tree` in parallel, and then calls `downsweepTraverse` to write
+   *  reduction `tree` in parallel, and then calls `downsweepSequential` to write
    *  the `output` angles.
    */
   def downsweep(input: Array[Float], output: Array[Float], startingAngle: Float,
